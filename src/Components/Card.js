@@ -23,7 +23,7 @@ const Card = () => {
 
     return (
         <div className=' text-white flex flex-wrap justify-between mt-2 p-3 '>
-            {loading ? <div className='w-[1300px ] m-auto mt-44'><ThreeDots /> </div> :
+            {loading ? <div className=' w-[1300px ] m-auto mt-44'><ThreeDots /> </div> :
                 data.map((e, i) => {
                     return (
                         <Link to={`/detail/${e.id}`}>

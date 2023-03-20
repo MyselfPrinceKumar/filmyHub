@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import ReactStars from 'react-stars'
 import { reviewsRef, db } from './FireBase/FireBase';
 import { addDoc, updateDoc, doc, query, where, getDocs } from 'firebase/firestore';
 import { TailSpin, ThreeDots } from 'react-loader-spinner';
 import swal from 'sweetalert';
+import { appState } from '../App';
+import { useNavigate } from 'react-router-dom';
 const Reviews = ({ id, prevRating, userRated }) => {
     const [rating, setRating] = useState();
     const [loading, setLoading] = useState(false);
@@ -11,27 +13,38 @@ const Reviews = ({ id, prevRating, userRated }) => {
     const [reviewsLoading, setReviewsLoading] = useState(false);
     const [data, setData] = useState([])
     const [addedReview, setAddedReview] = useState(0);
+    const useAppstate = useContext(appState);
+    const navigate = useNavigate();
     const sendReview = async () => {
         setLoading(true)
         try {
-            await addDoc(reviewsRef, {
-                moviesid: id,
-                name: "prince mourya",
-                rating: rating,
-                thought: form,
-                timestamp: new Date().getTime()
-            })
-            const ref = doc(db, "movies", id);
-            await updateDoc(ref, {
-                rating: prevRating + rating,
-                rated: userRated + 1
-            })
-            swal({
-                title: "Review Sent",
-                icon: "success",
-                timer: 3000,
-                buttons: false
-            })
+            if (useAppstate.login) {
+                await addDoc(reviewsRef, {
+                    moviesid: id,
+                    name: "prince mourya",
+                    rating: rating,
+                    thought: form,
+                    timestamp: new Date().getTime()
+                })
+                const ref = doc(db, "movies", id);
+                await updateDoc(ref, {
+                    rating: prevRating + rating,
+                    rated: userRated + 1
+                })
+                setForm("");
+                setRating()
+                setAddedReview(addedReview + 1);
+                swal({
+                    title: "Review Sent",
+                    icon: "success",
+                    timer: 3000,
+                    buttons: false
+                })
+            }
+            else {
+                navigate('/login');
+                alert("Login Is Must be Required For Review")
+            }
         } catch (error) {
             swal({
                 title: error,
@@ -41,9 +54,7 @@ const Reviews = ({ id, prevRating, userRated }) => {
             })
         }
         setLoading(false)
-        setForm("");
-        setRating()
-        setAddedReview(addedReview + 1);
+
     }
     useEffect(() => {
         const getData = async () => {
@@ -57,7 +68,7 @@ const Reviews = ({ id, prevRating, userRated }) => {
             setReviewsLoading(false);
         }
         getData();
-    }, [addedReview])
+    }, [addedReview, id])
     return (
         <div className='mt-4 w-full font-normal text-white text-xl'>
             <div className='mt-3 py-2 border-t-2 border-gray-500'><ReactStars onChange={(rate) => setRating(rate)} size={30} half={true} color1="white" edit={true} value={rating} /></div>
@@ -76,7 +87,7 @@ const Reviews = ({ id, prevRating, userRated }) => {
                                             <p className='text-xl text-blue-500'>{e.name}</p>
                                             <p className='ml-4 text-xs text-gray-400'>{new Date(e.timestamp).toLocaleString()}</p>
                                         </div>
-                                        <div><ReactStars onChange={(rate) => setRating(rate)} size={20} half={true} edit={false} value={e.rating} /></div>
+                                        <div><ReactStars onChange={(rate) => setRating(rate.rating)} size={20} half={true} edit={false} value={e.rating} /></div>
                                         <p className='text-lg text-gray-200'>{e.thought}</p>
                                     </div>
                                 )
